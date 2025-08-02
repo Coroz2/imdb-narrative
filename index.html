@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Evolution of Cinema: A Journey Through IMDB's Top Movies</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>The Evolution of Cinema</h1>
+            <p class="subtitle">A Journey Through IMDB's Top 1000 Movies</p>
+        </header>
+        
+        <nav class="scene-nav">
+            <button id="scene1-btn" class="nav-btn active">Timeline of Excellence</button>
+            <button id="scene2-btn" class="nav-btn">Genre Evolution</button>
+            <button id="scene3-btn" class="nav-btn">Critics vs Box Office</button>
+        </nav>
+        
+        <main>
+            <div id="scene-title">
+                <h2 id="scene-heading">Timeline of Excellence</h2>
+                <p id="scene-description">Explore how movie ratings and popularity have evolved over the decades</p>
+            </div>
+            
+            <div id="visualization-container">
+                <svg id="main-chart"></svg>
+            </div>
+            
+            <div id="controls">
+                <div id="scene1-controls" class="scene-controls active">
+                    <label for="decade-slider">Focus on Decade:</label>
+                    <input type="range" id="decade-slider" min="1920" max="2020" step="10" value="2000">
+                    <span id="decade-display">2000s</span>
+                </div>
+                
+                <div id="scene2-controls" class="scene-controls">
+                    <label for="genre-select">Highlight Genre:</label>
+                    <select id="genre-select">
+                        <option value="all">All Genres</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Action">Action</option>
+                        <option value="Crime">Crime</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Adventure">Adventure</option>
+                    </select>
+                </div>
+                
+                <div id="scene3-controls" class="scene-controls">
+                    <label for="rating-filter">Minimum IMDB Rating:</label>
+                    <input type="range" id="rating-filter" min="7.0" max="9.5" step="0.1" value="8.0">
+                    <span id="rating-display">8.0</span>
+                </div>
+            </div>
+            
+            <div id="insights">
+                <div class="insight-box">
+                    <h3 id="insight-title">Key Insight</h3>
+                    <p id="insight-text">The 1990s and 2000s represent the golden age of highly-rated cinema, with consistent production of acclaimed films.</p>
+                </div>
+            </div>
+        </main>
+        
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
