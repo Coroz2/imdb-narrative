@@ -1,3 +1,6 @@
+// Narrative Visualization: The Evolution of Cinema
+// Implementation using D3.js with scenes, annotations, parameters, and triggers
+
 class CinemaVisualization {
     constructor() {
         // Parameters (state variables)
@@ -50,24 +53,22 @@ class CinemaVisualization {
     }
     
     setupEventListeners() {
+        // Scene navigation triggers
         d3.select('#scene1-btn').on('click', () => this.switchToScene(1));
         d3.select('#scene2-btn').on('click', () => this.switchToScene(2));
         d3.select('#scene3-btn').on('click', () => this.switchToScene(3));
         
-        // Scene 1 controls
         d3.select('#decade-slider').on('input', (event) => {
             this.selectedDecade = +event.target.value;
             d3.select('#decade-display').text(this.selectedDecade + 's');
             if (this.currentScene === 1) this.updateScene1();
         });
-
-        // Scene 2 controls
+        
         d3.select('#genre-select').on('change', (event) => {
             this.selectedGenre = event.target.value;
             if (this.currentScene === 2) this.updateScene2();
         });
-        
-        // Scene 3 controls
+
         d3.select('#rating-filter').on('input', (event) => {
             this.minRating = +event.target.value;
             d3.select('#rating-display').text(this.minRating);
@@ -85,14 +86,14 @@ class CinemaVisualization {
                 year: +d.Released_Year,
                 rating: +d.IMDB_Rating,
                 metaScore: d.Meta_score ? +d.Meta_score : null,
-                genre: d.Genre.split(',')[0].trim(), // Primary genre
+                genre: d.Genre.split(',')[0].trim(),
                 director: d.Director,
                 votes: +d.No_of_Votes.replace(/,/g, ''),
                 gross: d.Gross && d.Gross.trim() !== '' ? +d.Gross.replace(/[",$]/g, '') : null,
                 runtime: +d.Runtime.replace(' min', ''),
                 overview: d.Overview,
                 stars: [d.Star1, d.Star2, d.Star3, d.Star4].filter(s => s)
-            })).filter(d => d.year >= 1920 && d.year <= 2020); // Filter valid years
+            })).filter(d => d.year >= 1920 && d.year <= 2020);
             
             console.log(`Loaded ${this.data.length} movies`);
             
@@ -128,23 +129,27 @@ class CinemaVisualization {
     }
     
     switchToScene(sceneNumber) {
+        // Update navigation
         d3.selectAll('.nav-btn').classed('active', false);
         d3.select(`#scene${sceneNumber}-btn`).classed('active', true);
+        
+        // Update controls
         d3.selectAll('.scene-controls').classed('active', false);
         d3.select(`#scene${sceneNumber}-controls`).classed('active', true);
         
         this.currentScene = sceneNumber;
         
-        // Clear previous scene
         this.chartGroup.selectAll('*').remove();
         
-        // Render new scene
         switch(sceneNumber) {
             case 1:
                 this.renderScene1();
                 break;
             case 2:
                 this.renderScene2();
+                break;
+            case 3:
+                this.renderScene3();
                 break;
         }
     }
@@ -165,7 +170,7 @@ class CinemaVisualization {
         this.addScene1Annotations();
         this.updateScene1Insight();
     }
-
+    
     renderScene2() {
         // Scene 2: Genre Evolution
         this.updateSceneTitle(
@@ -182,6 +187,42 @@ class CinemaVisualization {
         this.updateScene2Insight();
     }
     
+    renderScene3() {
+        this.updateSceneTitle(
+            'Critics vs Box Office',
+            'Examine the relationship between critical acclaim and commercial success'
+        );
+    
+        const minBoxOffice = 50000000;
+    
+        this.filteredData = this.data.filter(d => {
+            const hasValidGross = d.gross && !isNaN(d.gross) && d.gross >= minBoxOffice;
+            const hasValidMeta = d.metaScore && !isNaN(d.metaScore);
+            const hasValidRating = d.rating >= this.minRating;
+            return hasValidGross && hasValidMeta && hasValidRating;
+        });
+    
+        console.log(`Scene 3: Filtered to ${this.filteredData.length} movies`);
+        
+        this.grossExtentScene3 = d3.extent(
+            this.data.filter(d => d.gross && !isNaN(d.gross) && d.gross >= minBoxOffice),
+            d => d.gross
+        );
+    
+        const xScaleGross = d3.scaleLinear()
+            .domain([minBoxOffice, this.grossExtentScene3[1]])
+            .range([0, this.width]);
+    
+        const yScaleMeta = d3.scaleLinear()
+            .domain([20, 100])
+            .range([this.height, 0]);
+    
+        this.drawCustomAxes('Box Office Gross (Major Releases $50M+)', 'Metacritic Score', xScaleGross, yScaleMeta);
+        this.drawGridLines();
+        this.drawScene3Dots(xScaleGross, yScaleMeta);
+        this.addScene3Annotations(xScaleGross, yScaleMeta);
+        this.updateScene3Insight();
+    }
     
     updateSceneTitle(title, description) {
         d3.select('#scene-heading').text(title);
@@ -189,18 +230,15 @@ class CinemaVisualization {
     }
     
     drawAxes(xLabel, yLabel) {
-        // X axis
         this.chartGroup.append('g')
             .attr('class', 'axis')
             .attr('transform', `translate(0, ${this.height})`)
             .call(d3.axisBottom(this.xScale).tickFormat(d3.format('d')));
             
-        // Y axis
         this.chartGroup.append('g')
             .attr('class', 'axis')
             .call(d3.axisLeft(this.yScale));
             
-        // Axis labels
         this.chartGroup.append('text')
             .attr('class', 'axis-label')
             .attr('x', this.width / 2)
@@ -218,7 +256,7 @@ class CinemaVisualization {
     }
     
     drawCustomAxes(xLabel, yLabel, xScale, yScale) {
-        // X axis with clean formatting for linear scale
+        // X axis
         this.chartGroup.append('g')
             .attr('class', 'axis')
             .attr('transform', `translate(0, ${this.height})`)
@@ -258,6 +296,7 @@ class CinemaVisualization {
     }
     
     drawGridLines() {
+        // Horizontal lines
         this.chartGroup.selectAll('.grid-line-horizontal')
             .data(this.yScale.ticks())
             .enter()
@@ -268,6 +307,7 @@ class CinemaVisualization {
             .attr('y1', d => this.yScale(d))
             .attr('y2', d => this.yScale(d));
             
+        // Vertical lines
         this.chartGroup.selectAll('.grid-line-vertical')
             .data(this.xScale.ticks())
             .enter()
@@ -294,6 +334,20 @@ class CinemaVisualization {
         this.addTooltipEvents(dots);
     }
     
+    drawScene3Dots(xScale, yScale) {
+        const dots = this.chartGroup.selectAll('.movie-dot')
+            .data(this.filteredData)
+            .enter()
+            .append('circle')
+            .attr('class', 'movie-dot')
+            .attr('cx', d => xScale(d.gross))
+            .attr('cy', d => yScale(d.metaScore))
+            .attr('r', d => this.sizeScale(d.votes))
+            .attr('fill', d => this.colorScale(d.genre))
+            .attr('opacity', 0.7);
+            
+        this.addTooltipEvents(dots);
+    }
     
     addTooltipEvents(selection) {
         const self = this;
@@ -326,6 +380,7 @@ class CinemaVisualization {
     }
     
     addScene1Annotations() {
+        // Find notable movies for annotations
         const shawshank = this.data.find(d => d.title === 'The Shawshank Redemption');
         const godfather = this.data.find(d => d.title === 'The Godfather');
         
@@ -350,8 +405,9 @@ class CinemaVisualization {
                 .call(makeAnnotations);
         }
     }
-
+    
     addScene2Annotations() {
+        // Highlight genre trends
         const dramaMovies = this.data.filter(d => d.genre === 'Drama');
         const actionMovies = this.data.filter(d => d.genre === 'Action');
         
@@ -384,8 +440,38 @@ class CinemaVisualization {
         }
     }
     
- 
+    addScene3Annotations(xScale, yScale) {
+        // Find movies with high gross and high meta score
+        const successfulMovies = this.filteredData
+            .filter(d => d.gross > 300000000 && d.metaScore > 80)
+            .sort((a, b) => b.gross - a.gross)
+            .slice(0, 1);
+            
+        if (successfulMovies.length > 0) {
+            const movie = successfulMovies[0];
+            const annotations = [{
+                note: {
+                    label: `${movie.title} - Critical and commercial success`,
+                    title: 'Sweet Spot',
+                    wrap: 150
+                },
+                x: xScale(movie.gross),
+                y: yScale(movie.metaScore),
+                dx: -100,
+                dy: -50
+            }];
+            
+            const makeAnnotations = d3.annotation()
+                .annotations(annotations);
+                
+            this.chartGroup.append('g')
+                .attr('class', 'annotation-group')
+                .call(makeAnnotations);
+        }
+    }
+    
     updateScene1() {
+        // Highlight movies from selected decade
         const decadeStart = this.selectedDecade;
         const decadeEnd = this.selectedDecade + 9;
         
@@ -399,8 +485,9 @@ class CinemaVisualization {
             
         this.updateScene1Insight();
     }
-
+    
     updateScene2() {
+        // Highlight selected genre
         this.chartGroup.selectAll('.movie-dot')
             .attr('opacity', d => {
                 return (this.selectedGenre === 'all' || d.genre === this.selectedGenre) ? 0.8 : 0.2;
@@ -412,7 +499,42 @@ class CinemaVisualization {
         this.updateScene2Insight();
     }
     
- 
+    updateScene3() {
+        const minBoxOffice = 50000000;
+    
+        this.filteredData = this.data.filter(d => {
+            const hasValidGross = d.gross && !isNaN(d.gross) && d.gross >= minBoxOffice;
+            const hasValidMeta = d.metaScore && !isNaN(d.metaScore);
+            const hasValidRating = d.rating >= this.minRating;
+            return hasValidGross && hasValidMeta && hasValidRating;
+        });
+    
+        console.log(`Scene 3 Update: Filtered to ${this.filteredData.length} movies with rating >= ${this.minRating}`);
+    
+        if (this.filteredData.length === 0) {
+            console.warn('No data available for Scene 3 update');
+            return;
+        }
+    
+        const grossExtent = this.grossExtentScene3;
+    
+        this.chartGroup.selectAll('*').remove();
+    
+        const xScaleGross = d3.scaleLinear()
+            .domain([minBoxOffice, grossExtent[1]])
+            .range([0, this.width]);
+    
+        const yScaleMeta = d3.scaleLinear()
+            .domain([20, 100])
+            .range([this.height, 0]);
+    
+        this.drawCustomAxes('Box Office Gross (Major Releases $50M+)', 'Metacritic Score', xScaleGross, yScaleMeta);
+        this.drawGridLines();
+        this.drawScene3Dots(xScaleGross, yScaleMeta);
+        this.addScene3Annotations(xScaleGross, yScaleMeta);
+        this.updateScene3Insight();
+    }
+    
     updateScene1Insight() {
         const decadeMovies = this.data.filter(d => 
             d.year >= this.selectedDecade && d.year <= this.selectedDecade + 9
@@ -427,7 +549,7 @@ class CinemaVisualization {
             `This decade ${count > 80 ? 'was particularly prolific' : count > 50 ? 'had solid representation' : 'had fewer but quality films'} in cinema history.`
         );
     }
-
+    
     updateScene2Insight() {
         if (this.selectedGenre === 'all') {
             const genreCounts = d3.rollup(this.data, v => v.length, d => d.genre);
@@ -451,6 +573,20 @@ class CinemaVisualization {
         }
     }
     
+    updateScene3Insight() {
+        const highGrossMovies = this.filteredData.filter(d => d.gross > 200000000);
+        const correlation = this.calculateCorrelation(
+            this.filteredData.map(d => d.gross),
+            this.filteredData.map(d => d.metaScore)
+        );
+        
+        d3.select('#insight-title').text('Critics vs Commercial Success');
+        d3.select('#insight-text').text(
+            `Among movies rated ${this.minRating}+, there are ${highGrossMovies.length} blockbusters (>$200M). ` +
+            `The correlation between box office and critical acclaim is ${correlation > 0 ? 'positive' : 'negative'} (r=${correlation.toFixed(2)}), ` +
+            `${Math.abs(correlation) > 0.3 ? 'suggesting a meaningful relationship' : 'indicating weak correlation'}.`
+        );
+    }
     
     calculateCorrelation(x, y) {
         const n = x.length;
