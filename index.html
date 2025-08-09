@@ -17,6 +17,7 @@
         
         <nav class="scene-nav">
             <button id="scene1-btn" class="nav-btn active">Timeline of Excellence</button>
+            <button id="scene2-btn" class="nav-btn">Genre Evolution</button>
         </nav>
         
         <main>
@@ -35,6 +36,19 @@
                     <input type="range" id="decade-slider" min="1920" max="2020" step="10" value="2000">
                     <span id="decade-display">2000s</span>
                 </div>
+                
+                <div id="scene2-controls" class="scene-controls">
+                    <label for="genre-select">Highlight Genre:</label>
+                    <select id="genre-select">
+                        <option value="all">All Genres</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Action">Action</option>
+                        <option value="Crime">Crime</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Adventure">Adventure</option>
+                    </select>
+                </div>
+                
             </div>
             
             <div id="insights">
