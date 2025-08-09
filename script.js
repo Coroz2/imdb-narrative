@@ -258,7 +258,6 @@ class CinemaVisualization {
     }
     
     drawGridLines() {
-        // Horizontal grid lines
         this.chartGroup.selectAll('.grid-line-horizontal')
             .data(this.yScale.ticks())
             .enter()
@@ -269,7 +268,6 @@ class CinemaVisualization {
             .attr('y1', d => this.yScale(d))
             .attr('y2', d => this.yScale(d));
             
-        // Vertical grid lines
         this.chartGroup.selectAll('.grid-line-vertical')
             .data(this.xScale.ticks())
             .enter()
@@ -328,7 +326,6 @@ class CinemaVisualization {
     }
     
     addScene1Annotations() {
-        // Find notable movies for annotations
         const shawshank = this.data.find(d => d.title === 'The Shawshank Redemption');
         const godfather = this.data.find(d => d.title === 'The Godfather');
         
@@ -353,10 +350,42 @@ class CinemaVisualization {
                 .call(makeAnnotations);
         }
     }
+
+    addScene2Annotations() {
+        const dramaMovies = this.data.filter(d => d.genre === 'Drama');
+        const actionMovies = this.data.filter(d => d.genre === 'Action');
+        
+        const annotations = [];
+        
+        if (dramaMovies.length > 0) {
+            const avgYear = d3.mean(dramaMovies, d => d.year);
+            const avgRating = d3.mean(dramaMovies, d => d.rating);
+            
+            annotations.push({
+                note: {
+                    label: 'Drama dominates the top ratings',
+                    title: 'Genre Insight',
+                    wrap: 120
+                },
+                x: this.xScale(avgYear),
+                y: this.yScale(avgRating),
+                dx: -80,
+                dy: -40
+            });
+        }
+        
+        if (annotations.length > 0) {
+            const makeAnnotations = d3.annotation()
+                .annotations(annotations);
+                
+            this.chartGroup.append('g')
+                .attr('class', 'annotation-group')
+                .call(makeAnnotations);
+        }
+    }
     
  
     updateScene1() {
-        // Highlight movies from selected decade
         const decadeStart = this.selectedDecade;
         const decadeEnd = this.selectedDecade + 9;
         
