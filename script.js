@@ -50,14 +50,28 @@ class CinemaVisualization {
     }
     
     setupEventListeners() {
-        // Scene navigation triggers
         d3.select('#scene1-btn').on('click', () => this.switchToScene(1));
+        d3.select('#scene2-btn').on('click', () => this.switchToScene(2));
+        d3.select('#scene3-btn').on('click', () => this.switchToScene(3));
         
         // Scene 1 controls
         d3.select('#decade-slider').on('input', (event) => {
             this.selectedDecade = +event.target.value;
             d3.select('#decade-display').text(this.selectedDecade + 's');
             if (this.currentScene === 1) this.updateScene1();
+        });
+
+        // Scene 2 controls
+        d3.select('#genre-select').on('change', (event) => {
+            this.selectedGenre = event.target.value;
+            if (this.currentScene === 2) this.updateScene2();
+        });
+        
+        // Scene 3 controls
+        d3.select('#rating-filter').on('input', (event) => {
+            this.minRating = +event.target.value;
+            d3.select('#rating-display').text(this.minRating);
+            if (this.currentScene === 3) this.updateScene3();
         });
         
     }
@@ -82,7 +96,6 @@ class CinemaVisualization {
             
             console.log(`Loaded ${this.data.length} movies`);
             
-            // Debug: Check gross values
             const moviesWithGross = this.data.filter(d => d.gross);
             console.log(`Movies with gross data: ${moviesWithGross.length}`);
             console.log('Sample gross values:', moviesWithGross.slice(0, 5).map(d => ({title: d.title, gross: d.gross})));
@@ -92,34 +105,31 @@ class CinemaVisualization {
     }
     
     setupScales() {
-        // X scale: Year
+        // Year
         this.xScale = d3.scaleLinear()
             .domain(d3.extent(this.data, d => d.year))
             .range([0, this.width]);
             
-        // Y scale: Rating
+        // Rating
         this.yScale = d3.scaleLinear()
             .domain([6.5, 9.5])
             .range([this.height, 0]);
             
-        // Color scale: Genre
+        // Genre
         const genres = [...new Set(this.data.map(d => d.genre))];
         this.colorScale = d3.scaleOrdinal()
             .domain(genres)
             .range(d3.schemeCategory10);
             
-        // Size scale: Number of votes (popularity)
+        // Number of votes (popularity)
         this.sizeScale = d3.scaleSqrt()
             .domain(d3.extent(this.data, d => d.votes))
             .range([3, 12]);
     }
     
     switchToScene(sceneNumber) {
-        // Update navigation
         d3.selectAll('.nav-btn').classed('active', false);
         d3.select(`#scene${sceneNumber}-btn`).classed('active', true);
-        
-        // Update controls
         d3.selectAll('.scene-controls').classed('active', false);
         d3.select(`#scene${sceneNumber}-controls`).classed('active', true);
         
@@ -132,6 +142,9 @@ class CinemaVisualization {
         switch(sceneNumber) {
             case 1:
                 this.renderScene1();
+                break;
+            case 2:
+                this.renderScene2();
                 break;
         }
     }
@@ -146,12 +159,27 @@ class CinemaVisualization {
         this.drawAxes('Year', 'IMDB Rating');
         this.drawGridLines();
         
-        // Filter data for current decade highlight
         this.filteredData = this.data;
         
         this.drawMovieDots();
         this.addScene1Annotations();
         this.updateScene1Insight();
+    }
+
+    renderScene2() {
+        // Scene 2: Genre Evolution
+        this.updateSceneTitle(
+            'Genre Evolution',
+            'Discover how different movie genres have dominated different eras'
+        );
+        
+        this.drawAxes('Year', 'IMDB Rating');
+        this.drawGridLines();
+        
+        this.filteredData = this.data;
+        this.drawMovieDots();
+        this.addScene2Annotations();
+        this.updateScene2Insight();
     }
     
     
