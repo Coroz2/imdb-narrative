@@ -399,6 +399,18 @@ class CinemaVisualization {
             
         this.updateScene1Insight();
     }
+
+    updateScene2() {
+        this.chartGroup.selectAll('.movie-dot')
+            .attr('opacity', d => {
+                return (this.selectedGenre === 'all' || d.genre === this.selectedGenre) ? 0.8 : 0.2;
+            })
+            .attr('stroke-width', d => {
+                return (this.selectedGenre === 'all' || d.genre === this.selectedGenre) ? 2 : 1;
+            });
+            
+        this.updateScene2Insight();
+    }
     
  
     updateScene1Insight() {
@@ -414,6 +426,29 @@ class CinemaVisualization {
             `The ${this.selectedDecade}s produced ${count} top-rated films with an average IMDB rating of ${avgRating}. ` +
             `This decade ${count > 80 ? 'was particularly prolific' : count > 50 ? 'had solid representation' : 'had fewer but quality films'} in cinema history.`
         );
+    }
+
+    updateScene2Insight() {
+        if (this.selectedGenre === 'all') {
+            const genreCounts = d3.rollup(this.data, v => v.length, d => d.genre);
+            const topGenre = [...genreCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+            
+            d3.select('#insight-title').text('Genre Distribution');
+            d3.select('#insight-text').text(
+                `Among the top 1000 films, ${topGenre[0]} leads with ${topGenre[1]} movies, ` +
+                `demonstrating its consistent ability to produce critically acclaimed cinema.`
+            );
+        } else {
+            const genreMovies = this.data.filter(d => d.genre === this.selectedGenre);
+            const avgRating = d3.mean(genreMovies, d => d.rating).toFixed(1);
+            const yearRange = d3.extent(genreMovies, d => d.year);
+            
+            d3.select('#insight-title').text(`${this.selectedGenre} Movies`);
+            d3.select('#insight-text').text(
+                `${this.selectedGenre} films span from ${yearRange[0]} to ${yearRange[1]} with an average rating of ${avgRating}. ` +
+                `This genre has ${genreMovies.length} representatives in the top 1000.`
+            );
+        }
     }
     
     
