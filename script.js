@@ -1,9 +1,5 @@
-// Narrative Visualization: The Evolution of Cinema
-// Implementation using D3.js with scenes, annotations, parameters, and triggers
-
 class CinemaVisualization {
     constructor() {
-        // Parameters (state variables)
         this.currentScene = 1;
         this.selectedDecade = 2000;
         this.selectedGenre = 'all';
@@ -11,18 +7,15 @@ class CinemaVisualization {
         this.data = [];
         this.filteredData = [];
         
-        // Chart dimensions and margins
         this.margin = { top: 40, right: 80, bottom: 80, left: 80 };
         this.width = 900 - this.margin.left - this.margin.right;
         this.height = 500 - this.margin.top - this.margin.bottom;
         
-        // D3 scales
         this.xScale = null;
         this.yScale = null;
         this.colorScale = null;
         this.sizeScale = null;
         
-        // SVG and chart groups
         this.svg = null;
         this.chartGroup = null;
         this.tooltip = null;
